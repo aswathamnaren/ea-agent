@@ -1,16 +1,33 @@
-Produce clarification questions grouped by tier (CRITICAL / IMPORTANT / PREFERENCE).
-Only ask what is genuinely ambiguous after research. Never ask about information
-already documented in Jira tickets or Confluence pages.
+Produce clarification questions grouped by CRITICAL / IMPORTANT / PREFERENCE.
 
-Tier rules:
-- CRITICAL   : blocks diagram generation (integration mechanism, new vs existing
-               API, state-machine ownership, external system identity).
-- IMPORTANT  : affects scope/accuracy (config new vs reused, code vs config change).
-- PREFERENCE : affects document structure (sequence grouping, solution-area naming).
+Only ask what remains ambiguous after Jira, Confluence and ARCO research.
 
-Ask all questions in a single set. For each question provide id, tier, topic,
-context (what was found and why it is ambiguous) and the question itself.
+For every question include:
+- id
+- tier
+- topic
+- evidence
+- context
+- question
+
+The "evidence" field must summarize which source caused the ambiguity:
+- Jira ticket key or Jira search result
+- Confluence page title or search summary
+- ARCO retrieved solution/reference
+- or "Not found in research"
+
+Do not ask questions if the answer is clearly available in research.
 
 Respond ONLY as JSON:
-{{"questions": [{{"id": "Q1", "tier": "CRITICAL", "topic": "...",
-                 "context": "...", "question": "..."}}]}}
+{
+  "questions": [
+    {
+      "id": "Q1",
+      "tier": "CRITICAL",
+      "topic": "...",
+      "evidence": "Jira ACC-123 says..., Confluence page X says...",
+      "context": "...",
+      "question": "..."
+    }
+  ]
+}

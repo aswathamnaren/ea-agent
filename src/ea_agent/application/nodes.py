@@ -4,12 +4,12 @@ from __future__ import annotations
 from typing import Any
 
 from langgraph.types import interrupt
-
+from ea_agent.infrastructure.research_logger import save_research_trace
 from ea_agent.application.reasoning import ReasoningEngine
 from ea_agent.domain.ports import ReasonerPort, ResearchSkillPort, PublishSkillPort, PromptProviderPort
 
 SPACE_MAP = {
-    "RAITT": ["ARCH", "IAM", "NMD", "OpsVoice"],
+    "RAITT": ["ARCH", "RAITT"],
     "FASTT": ["FASTT", "ARCH", "IAM"],
     "Legacy": ["ARCH", "DAS"],
 }
@@ -63,18 +63,48 @@ class Nodes:
     # ---- EXECUTE: research ----
     async def research_node(self, state: dict[str, Any]) -> dict[str, Any]:
         spaces = SPACE_MAP[state["program_type"]]
+
         hierarchy = await self._research.search_jira_hierarchy(state["sr_id"])
-        confluence = await self._research.search_confluence(state["sr_id"], spaces)
+
+        confluence = await self._research.search_confluence(
+            query=state["sr_id"],
+            spaces=spaces,
+        )
+
+        arco = {}
+        if hasattr(self._research, "search_existing_solutions"):
+            arco = await self._research.search_existing_solutions(
+                sr_id=state["sr_id"],
+                summary=str(hierarchy.get("sr", "")),
+            )
+
         systems = await self._extract_systems(hierarchy, confluence)
+
+        research_payload = {
+            "jira": hierarchy,
+            "confluence": confluence,
+            "arco": arco,
+        }
+
+        trace_path = save_research_trace(
+            execution_id=state.get("execution_id", "unknown"),
+            research=research_payload,
+        )
+
         return {
-            "research": {"jira": hierarchy, "confluence": confluence},
+            "research": research_payload,
             "systems": systems,
             "research_count": state.get("research_count", 0) + 1,
             "phase": "research",
-            "events": [f"🔎 Searched Jira + Confluence ({', '.join(spaces)})",
-                       f"🧩 Identified {len(systems)} systems"],
+            "events": [
+                f"🔎 Searched Jira for {state['sr_id']}",
+                f"🔎 Searched Confluence spaces: {', '.join(spaces)}",
+                "🧠 Searched ARCO MiniBot for existing solution patterns",
+                f"📄 Saved research trace: {trace_path}",
+                f"🧩 Identified {len(systems)} systems",
+            ],
         }
-
+        
     # ---- THINK + HUMAN-IN-THE-LOOP: clarify ----
     async def clarify_node(self, state: dict[str, Any]) -> dict[str, Any]:
         # If questions were already asked and answered, do nothing (avoid re-ask).

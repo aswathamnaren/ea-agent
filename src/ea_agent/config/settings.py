@@ -39,42 +39,86 @@ class BedrockSettings(BaseSettings):
 
 
 class DynamoDBSettings(BaseSettings):
-    """DynamoDB checkpoint persistence (Repository Pattern, §21-22)."""
+    """DynamoDB checkpoint persistence."""
+
     model_config = SettingsConfigDict(env_prefix="DYNAMODB_", extra="ignore")
 
-    table_name: str = Field(
-        default="ea-agent-checkpoints",
-        description="DynamoDB table storing LangGraph execution checkpoints.",
-    )
-    region: str = Field(default="eu-central-1", description="AWS region for DynamoDB.")
-    endpoint_url: str | None = Field(
-        default=None,
-        description="Override endpoint for local testing (e.g. DynamoDB Local).",
-    )
+    table_name: str = "ea-agent-checkpoints"
+    region: str = "eu-central-1"
+    endpoint_url: str | None = None
 
 
 class McpSettings(BaseSettings):
-    """MCP server endpoints for enterprise knowledge skills (§20)."""
+    """MCP server configuration for enterprise knowledge retrieval."""
+
     model_config = SettingsConfigDict(env_prefix="MCP_", extra="ignore")
 
-    jira_url: str = Field(default="", description="Jira MCP server URL.")
-    confluence_url: str = Field(default="", description="Confluence MCP server URL.")
-    arco_url: str = Field(default="", description="ARCO MCP server URL.")
+    use_real_clients: bool = Field(
+        default=False,
+        description="Use real MCP clients instead of fake smoke-test skills.",
+    )
+
+    # Atlassian MCP - stdio
+    atlassian_transport: Literal["stdio", "http"] = "stdio"
+    atlassian_command: str = "mcp-atlassian"
+    atlassian_args: str = (
+        "--no-confluence-ssl-verify,"
+        "--no-jira-ssl-verify,"
+        "--transport,"
+        "stdio"
+    )
+
+    # ARCO MiniBot MCP - HTTP
+    arco_transport: Literal["http", "stdio"] = "http"
+    arco_url: str = ""
+
+    # Jira tool names
+    jira_get_issue_tool: str = "jira_get_issue"
+    jira_search_tool: str = "jira_search"
+
+    # Confluence tool names
+    confluence_search_tool: str = "confluence_search"
+    confluence_get_page_tool: str = "confluence_get_page"
+    confluence_get_children_tool: str = "confluence_get_page_children"
+
+    # ARCO tool name
+    arco_search_tool: str = "search"
+
+    # Confluence knowledge scope
+    confluence_parent_page_urls: str = ""
+    confluence_spaces: str = "ARCH,RAITT"
+
+    @property
+    def atlassian_args_list(self) -> list:
+        return [x.strip() for x in self.atlassian_args.split(",") if x.strip()]
+
+    @property
+    def confluence_parent_pages_list(self) -> list:
+        return [
+            x.strip()
+            for x in self.confluence_parent_page_urls.split(",")
+            if x.strip()
+        ]
+
+    @property
+    def confluence_spaces_list(self) -> list:
+        return [
+            x.strip()
+            for x in self.confluence_spaces.split(",")
+            if x.strip()
+        ]
 
 
 class AgentSettings(BaseSettings):
-    """Agent reasoning behaviour (confidence-driven execution, §31-32)."""
+    """Agent reasoning behaviour."""
+
     model_config = SettingsConfigDict(env_prefix="AGENT_", extra="ignore")
 
-    confidence_threshold: float = Field(
-        default=0.85,
-        ge=0.0,
-        le=1.0,
-        description="Below this overall confidence the agent clarifies instead of assuming.",
-    )
+    confidence_threshold: float = Field(default=0.85, ge=0.0, le=1.0)
+
     prompts_dir: Path = Field(
         default=Path(__file__).resolve().parents[1] / "prompts",
-        description="Directory holding externalised prompt Markdown files (§24).",
+        description="Directory holding externalised prompt Markdown files.",
     )
 
     @field_validator("prompts_dir")
