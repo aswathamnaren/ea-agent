@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# ============================================================
+#  Project metadata
+# ============================================================
+[project]
+name = "ea-agent"
+version = "0.1.0"
+description = "Enterprise Solution Architect Agent — autonomous SAD generation (LangGraph + Bedrock)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [
+    { name = "A Narendra Kumar" },
+]
+keywords = ["enterprise-architecture", "langgraph", "bedrock", "sad", "agent"]
+
+# --- Runtime dependencies -----------------------------------
+dependencies = [
+    # Agent orchestration (isolated in the Application layer)
+    "langgraph>=0.2.0",
+    "langgraph-checkpoint>=2.0.0",
+
+    # AWS Bedrock + DynamoDB (Infrastructure layer only)
+    "boto3>=1.34.0",
+    "botocore>=1.34.0",
+
+    # Domain models & validation
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+
+    # Configuration & logging
+    "python-dotenv>=1.0.0",
+    "structlog>=24.1.0",
+    
+    # MCP integration (enterprise knowledge skills)   👈 ADD
+    "mcp>=1.0.0",
+
+]
+
+# --- Optional dependency groups -----------------------------
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.3.0",
+    "mypy>=1.9.0",
+    "types-boto3>=1.0.0",
+]
+api = [
+    # Presentation layer — add when you expose FastAPI
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+]
+
+# ============================================================
+#  Packaging — src layout
+# ============================================================
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+# Ship the externalised prompts with the package (PROJECT_CONTEXT §24)
+"ea_agent.prompts" = ["*.md"]
+
+# ============================================================
+#  Tooling configuration
+# ============================================================
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["ea_agent"]
+branch = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "C4"]
+ignore = ["E501"]  # line length handled by formatter
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+mypy_path = "src"
+# Third-party libs without stubs
+[[tool.mypy.overrides]]
+module = ["langgraph.*", "boto3.*", "botocore.*"]
+ignore_missing_imports = true

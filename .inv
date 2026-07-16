@@ -1,0 +1,22 @@
+# --- Environment ---
+ENVIRONMENT=development
+LOG_LEVEL=DEBUG
+
+# --- Bedrock ---
+BEDROCK_MODEL_ID=anthropic.claude-sonnet-4-5-v1:0
+BEDROCK_REGION=eu-central-1
+BEDROCK_TEMPERATURE=0.2
+BEDROCK_MAX_TOKENS=4096
+
+# --- DynamoDB (checkpoints) ---
+DYNAMODB_TABLE_NAME=ea-agent-checkpoints
+DYNAMODB_REGION=eu-central-1
+# DYNAMODB_ENDPOINT_URL=http://localhost:8000   # uncomment for DynamoDB Local
+
+# --- MCP servers ---
+MCP_JIRA_URL=
+MCP_CONFLUENCE_URL=
+MCP_ARCO_URL=
+
+# --- Agent behaviour ---
+AGENT_CONFIDENCE_THRESHOLD=0.85

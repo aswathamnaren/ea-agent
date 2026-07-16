@@ -1,0 +1,50 @@
+# ===== Secrets & environment (NEVER commit) =====
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# ===== Virtual environment =====
+.venv/
+venv/
+env/
+ENV/
+
+# ===== Editable install artifacts =====
+*.egg-link
+src/*.egg-info/
+
+# ===== Testing & coverage =====
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ===== Generated output (agent SADs) =====
+output/
+
+# ===== IDE / editor =====
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Logs =====
+*.log
